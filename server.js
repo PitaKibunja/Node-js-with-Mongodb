@@ -45,32 +45,30 @@ app.get('/messages', (req, res)=>{
     
 })
 
-app.post('/messages', (req, res)=>{
+app.post('/messages', async (req, res)=>{
     //create a message object to save items to db
     var message=new Message(req.body)
 
     //save and return if an error occurs.
-    message.save().then(()=>{
-        console.log('saved')
-        return Message.findOne({message:'badword'})
-       })
-       .then(censored =>{
+    var savedMessage=await message.save()
+    console.log('saved')
+    var censored=await Message.findOne({message:'badword'})
            //the call back will get the result from the above then
            //function.
-           if(censored){
-            console.log('censored word found', censored)
-            return Message.remove({_id:censored.id})
-        }
-        //if there are no sensored word
-        io.emit('message', req.body)
-        res.sendStatus(200) 
+    if(censored){
+            await Message.remove({_id:censored.id})
+    }else{
+     //if there are no sensored word
+    io.emit('message', req.body)
+    }
+    res.sendStatus(200) 
 
-       })
-       .catch((err)=>{
-        res.sendStatus(500)
-        return console.error(err)
+       
+    //    .catch((err)=>{
+    //     res.sendStatus(500)
+    //     return console.error(err)
 
-    })
+    // })
  
 })
 
