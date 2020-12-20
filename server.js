@@ -4,6 +4,9 @@ var bodyParser=require('body-parser')
 const { Socket } = require('dgram')
 var app=express()
 
+//track what is causing derprecation warning 
+//in the script
+process.traceDeprecation = true;
 
 //let's set the socket.io for the backend
 var http=require('http').Server(app)
@@ -21,6 +24,12 @@ app.use(bodyParser.json())
 
 
 app.use(bodyParser.urlencoded({extended:false}))
+
+//connect using the default ES6 Promise library
+
+mongoose.Promise=Promise
+
+
 //let's create a connection to the mongodb using the link
 var dbUrl='mongodb+srv://pita:kTHy17W339spuDJM@cluster0.0thoj.mongodb.net/nodejs?retryWrites=true&w=majority'
 
@@ -41,20 +50,28 @@ app.post('/messages', (req, res)=>{
     var message=new Message(req.body)
 
     //save and return if an error occurs.
-    message.save((err)=>{
-        if(err){
-            sendStatus(500)
-        }
-       Message.findOne({message:'badword'}, (err,censored)=>{
-           if(censored){
-               console.log('censored word found', censored)
-               Message.remove({_id:censored.id},(err)=>{
-                   console.log('removed censored message')
-               })
-           }
+    message.save().then(()=>{
+        console.log('saved')
+        return Message.findOne({message:'badword'})
        })
+       .then(censored =>{
+           //the call back will get the result from the above then
+           //function.
+           if(censored){
+            console.log('censored word found', censored)
+            Message.remove({_id:censored.id},(err)=>{
+                console.log('removed censored message')
+            })
+        }
+        //if there are no sensored word
         io.emit('message', req.body)
-        res.sendStatus(200)
+        res.sendStatus(200) 
+        
+       })
+       .catch((err)=>{
+        res.sendStatus(500)
+        return console.error(err)
+
     })
  
 })
