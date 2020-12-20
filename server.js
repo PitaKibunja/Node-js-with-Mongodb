@@ -59,14 +59,12 @@ app.post('/messages', (req, res)=>{
            //function.
            if(censored){
             console.log('censored word found', censored)
-            Message.remove({_id:censored.id},(err)=>{
-                console.log('removed censored message')
-            })
+            return Message.remove({_id:censored.id})
         }
         //if there are no sensored word
         io.emit('message', req.body)
         res.sendStatus(200) 
-        
+
        })
        .catch((err)=>{
         res.sendStatus(500)
