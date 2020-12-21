@@ -46,7 +46,10 @@ app.get('/messages', (req, res)=>{
 })
 
 app.post('/messages', async (req, res)=>{
-    //create a message object to save items to db
+    //use try-catch to do error handling
+    try{
+        
+            //create a message object to save items to db
     var message=new Message(req.body)
 
     //save and return if an error occurs.
@@ -63,13 +66,16 @@ app.post('/messages', async (req, res)=>{
     }
     res.sendStatus(200) 
 
-       
-    //    .catch((err)=>{
-    //     res.sendStatus(500)
-    //     return console.error(err)
+    }catch(error){   
+            res.sendStatus(500)
+            return console.error(err)
+    }
+    
+    
 
-    // })
- 
+
+       
+
 })
 
 io.on('connection', (socket)=>{
